@@ -1,0 +1,24 @@
+spring:
+  application:
+    name: swaply-chat-service
+
+  flyway:
+    enabled: false
+    table: flyway_schema_history_chat
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+    baseline-version: 0
+
+
+  config:
+    import: "optional:configserver:http://localhost:8881"
+
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 50MB
+
+logging:
+  level:
+    com.example.sagaproduct.consumer: debug
+
