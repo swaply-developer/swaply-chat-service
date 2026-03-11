@@ -29,6 +29,7 @@ public class ChatRoomController {
             @RequestParam(defaultValue = "0")  int page,
             @RequestParam(defaultValue = "20") int size
     ) {
+        log.info(">>>> 들어온 X-Member-Id 헤더: {}", memberIdHeader); // 이 로그가 null이면 Gateway 문제
         Long memberId = parseMemberId(memberIdHeader);
         if (memberId == null) return ResponseEntity.status(401).build();
 
@@ -55,6 +56,7 @@ public class ChatRoomController {
             @RequestBody @Valid CreateRoomRequest request,
             @RequestHeader(value = "X-Member-Id", required = false) String memberIdHeader
     ) {
+        log.info(">>>> 들어온 헤더값: {}", memberIdHeader); // 👈 이게 null이면 Gateway 필터 문제
         Long memberId = parseMemberId(memberIdHeader);
         if (memberId == null) return ResponseEntity.status(401).build();
 
@@ -78,8 +80,12 @@ public class ChatRoomController {
     }
 
     // ── 헬퍼
+    // parseMemberId 메서드 부분을 아래와 같이 수정 (또는 호출부 수정)
     private Long parseMemberId(String header) {
-        if (header == null || header.isBlank()) return null;
+        if (header == null || header.isBlank() || header.equals("undefined")) {
+            log.warn(">>>> [ChatService] X-Member-Id 헤더가 비어있습니다!");
+            return null;
+        }
         try { return Long.parseLong(header); }
         catch (NumberFormatException e) { return null; }
     }
