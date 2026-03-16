@@ -79,6 +79,7 @@ public class JwtChannelInterceptor implements ChannelInterceptor {
         } catch (AccessDeniedException e) {
             throw e;
         } catch (Exception e) {
+            log.warn("[STOMP] JWT 검증 실패: {} | Session: {}", e.getMessage(), accessor.getSessionId());
             log.warn("[STOMP] JWT 검증 실패: {}", e.getMessage());
             throw new AccessDeniedException("유효하지 않은 토큰입니다");
         }
