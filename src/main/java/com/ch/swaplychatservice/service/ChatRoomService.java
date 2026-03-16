@@ -1,5 +1,6 @@
 package com.ch.swaplychatservice.service;
 
+import com.ch.swaplychatservice.dto.message.ChatNotificationMessage;
 import com.ch.swaplychatservice.dto.request.CreateRoomRequest;
 import com.ch.swaplychatservice.dto.response.ChatRoomResponse;
 import com.ch.swaplychatservice.dto.response.MemberInfo;
@@ -9,11 +10,15 @@ import com.ch.swaplychatservice.repository.ChatMessageRepository;
 import com.ch.swaplychatservice.repository.ChatRoomRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+
+import java.util.Collections;
 
 @Slf4j
 @Service
@@ -23,6 +28,7 @@ public class ChatRoomService {
     private final ChatRoomRepository    roomRepository;
     private final ChatMessageRepository messageRepository;
     private final MemberQueryService    memberQuery;
+    private final RabbitTemplate rabbitTemplate;
 
     // ── 내 채팅방 목록 ─────────────────────────────────────
     @Transactional(readOnly = true)
@@ -64,8 +70,31 @@ public class ChatRoomService {
                 .orElseGet(() -> {
                     ChatRoom newRoom = ChatRoom.create(productId, buyerId, sellerId);
                     roomRepository.save(newRoom);
-                    log.info("채팅방 생성: roomId={}, productId={}, buyer={}, seller={}",
-                            newRoom.getRoomId(), productId, buyerId, sellerId);
+
+                    try {
+                        // 알림에 필요한 부가 정보(닉네임, 상품명 등) 조회
+                        ProductInfo product = memberQuery.getProduct(productId);
+                        MemberInfo buyer = memberQuery.getMember(buyerId);
+
+                        // ✅ 제공해주신 양식(ChatNotificationMessage)에 맞춰 데이터 구성
+                        ChatNotificationMessage message = ChatNotificationMessage.builder()
+                                .roomId(newRoom.getRoomId())
+                                .senderId(buyerId)
+                                .senderNickname(buyer.getNickname())
+                                .receiverId(sellerId)
+                                .productTitle(product.getTitle())
+                                .productThumbnailUrl(product.getThumbnailUrl())
+                                .build();
+
+                        // 관리자 페이지에서 본 'chat.notification.exchange'로 발송
+                        // Routing Key는 보통 큐 이름에서 .queue를 뺀 값을 많이 씁니다. (Bindings 확인 필요)
+                        rabbitTemplate.convertAndSend("chat.notification.exchange", "chat.notification", message);
+
+                        log.info("[MQ-Chat] 메시지 발행 완료: roomId={}", newRoom.getRoomId());
+                    } catch (Exception e) {
+                        log.error("[MQ-Chat] 메시지 발행 실패: {}", e.getMessage());
+                    }
+
                     return buildResponse(newRoom, buyerId);
                 });
     }
