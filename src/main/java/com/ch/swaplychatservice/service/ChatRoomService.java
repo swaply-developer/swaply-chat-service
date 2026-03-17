@@ -8,6 +8,7 @@ import com.ch.swaplychatservice.dto.response.ProductInfo;
 import com.ch.swaplychatservice.entity.ChatRoom;
 import com.ch.swaplychatservice.repository.ChatMessageRepository;
 import com.ch.swaplychatservice.repository.ChatRoomRepository;
+import com.ch.swaplychatservice.service.ChatMessageService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -27,6 +28,7 @@ public class ChatRoomService {
 
     private final ChatRoomRepository    roomRepository;
     private final ChatMessageRepository messageRepository;
+    private final ChatMessageService       chatMessageService;
     private final MemberQueryService    memberQuery;
     private final RabbitTemplate rabbitTemplate;
 
@@ -107,7 +109,17 @@ public class ChatRoomService {
             throw new IllegalArgumentException("유효하지 않은 협의 가격입니다.");
         }
         room.acceptNegotiatedPrice(price);
+        // 수락 알림 발행
+        chatMessageService.publishPriceAccepted(roomId, memberId, price);
         return buildResponse(room, memberId);
+    }
+
+    // ── 가격 제안 거절 ─────────────────────────────────────
+    @Transactional
+    public void rejectNegotiatedPrice(Long roomId, Long memberId, Long price) {
+        ChatRoom room = findRoomAndCheckAccess(roomId, memberId);
+        // 거절 알림 발행
+        chatMessageService.publishPriceRejected(roomId, memberId, price);
     }
 
     // ── 협의 가격 조회 (payment-service 내부 통신용) ───────────

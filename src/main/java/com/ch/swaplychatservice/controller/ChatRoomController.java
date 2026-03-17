@@ -99,6 +99,23 @@ public class ChatRoomController {
     }
 
     /**
+     * POST /api/chat/rooms/{roomId}/reject-price
+     * 가격 제안 거절 — 알림 발행용
+     */
+    @PostMapping("/rooms/{roomId}/reject-price")
+    public ResponseEntity<Void> rejectPrice(
+            @PathVariable Long roomId,
+            @RequestBody @Valid AcceptPriceRequest request,
+            @RequestHeader(value = "X-Member-Id", required = false) String memberIdHeader
+    ) {
+        Long memberId = parseMemberId(memberIdHeader);
+        if (memberId == null) return ResponseEntity.status(401).build();
+
+        chatRoomService.rejectNegotiatedPrice(roomId, memberId, request.getPrice());
+        return ResponseEntity.noContent().build();
+    }
+
+    /**
      * GET /api/chat/internal/negotiated-price?productId=2&buyerId=3
      * payment-service 내부 통신 전용 — 협의 가격 조회
      */
