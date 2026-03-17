@@ -25,13 +25,16 @@ public class ChatRoomResponse {
     private String sellerNickname;
     private String sellerProfileImage;
 
-    // 조회 시점의 내 상대방 정보 (편의 필드)
     private String partnerNickname;
     private String partnerProfileImage;
 
-    private String lastMessage;
-    private int    unreadCount;   // 나 기준 안 읽은 수
+    private String    lastMessage;
+    private int       unreadCount;
     private RoomStatus status;
+
+    /** 협의된 가격. null이면 원가 결제, non-null이면 이 가격으로 결제 */
+    private Long negotiatedPrice;
+
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
@@ -63,6 +66,7 @@ public class ChatRoomResponse {
                 .lastMessage(room.getLastMessage())
                 .unreadCount(isBuyer ? room.getBuyerUnread() : room.getSellerUnread())
                 .status(room.getStatus())
+                .negotiatedPrice(room.getNegotiatedPrice())  // ← 협의 가격 포함
                 .createdAt(room.getCreatedAt())
                 .updatedAt(room.getUpdatedAt())
                 .build();

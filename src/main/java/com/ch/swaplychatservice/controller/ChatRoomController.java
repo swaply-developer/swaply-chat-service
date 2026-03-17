@@ -1,5 +1,6 @@
 package com.ch.swaplychatservice.controller;
 
+import com.ch.swaplychatservice.dto.request.AcceptPriceRequest;
 import com.ch.swaplychatservice.dto.request.CreateRoomRequest;
 import com.ch.swaplychatservice.dto.response.ChatMessageResponse;
 import com.ch.swaplychatservice.dto.response.ChatRoomResponse;
@@ -11,6 +12,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
 
 @Slf4j
 @RestController
@@ -77,6 +80,35 @@ public class ChatRoomController {
         if (memberId == null) return ResponseEntity.status(401).build();
 
         return ResponseEntity.ok(chatMessageService.getMessages(roomId, memberId, page, size));
+    }
+
+    /**
+     * PATCH /api/chat/rooms/{roomId}/accept-price
+     * 가격 제안 수락 — 협의 가격을 chat_room에 저장
+     */
+    @PatchMapping("/rooms/{roomId}/accept-price")
+    public ResponseEntity<ChatRoomResponse> acceptPrice(
+            @PathVariable Long roomId,
+            @RequestBody @Valid AcceptPriceRequest request,
+            @RequestHeader(value = "X-Member-Id", required = false) String memberIdHeader
+    ) {
+        Long memberId = parseMemberId(memberIdHeader);
+        if (memberId == null) return ResponseEntity.status(401).build();
+
+        return ResponseEntity.ok(chatRoomService.acceptNegotiatedPrice(roomId, memberId, request.getPrice()));
+    }
+
+    /**
+     * GET /api/chat/internal/negotiated-price?productId=2&buyerId=3
+     * payment-service 내부 통신 전용 — 협의 가격 조회
+     */
+    @GetMapping("/internal/negotiated-price")
+    public ResponseEntity<Map<String, Long>> getNegotiatedPrice(
+            @RequestParam Long productId,
+            @RequestParam Long buyerId
+    ) {
+        Long price = chatRoomService.getNegotiatedPrice(productId, buyerId);
+        return ResponseEntity.ok(Map.of("negotiatedPrice", price != null ? price : -1L));
     }
 
     // ── 헬퍼

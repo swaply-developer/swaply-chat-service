@@ -49,6 +49,14 @@ public class ChatRoom {
     @Column(nullable = false, length = 20)
     private RoomStatus status = RoomStatus.ACTIVE;
 
+    /**
+     * 채팅에서 합의된 가격.
+     * null = 원가 그대로 결제
+     * non-null = 가격 제안 수락된 협의 가격
+     */
+    @Column(name = "negotiated_price")
+    private Long negotiatedPrice;
+
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -74,7 +82,6 @@ public class ChatRoom {
     }
 
     // ── 도메인 메서드 ────────────────────────────────────────
-    /** 마지막 메시지 + 상대방 unread 증가 */
     public void receiveMessage(String preview, Long senderId) {
         this.lastMessage = preview;
         if (senderId.equals(buyerId)) {
@@ -84,7 +91,6 @@ public class ChatRoom {
         }
     }
 
-    /** 입장 시 읽음 처리 */
     public void markRead(Long memberId) {
         if (memberId.equals(buyerId))   this.buyerUnread  = 0;
         if (memberId.equals(sellerId))  this.sellerUnread = 0;
@@ -94,8 +100,12 @@ public class ChatRoom {
         this.status = RoomStatus.CLOSED;
     }
 
-    /** 해당 회원이 이 방의 참여자인지 확인 */
     public boolean isParticipant(Long memberId) {
         return buyerId.equals(memberId) || sellerId.equals(memberId);
+    }
+
+    /** 가격 제안 수락 시 협의 가격 저장 */
+    public void acceptNegotiatedPrice(Long price) {
+        this.negotiatedPrice = price;
     }
 }
