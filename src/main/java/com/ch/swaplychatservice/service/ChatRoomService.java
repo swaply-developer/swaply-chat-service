@@ -99,6 +99,25 @@ public class ChatRoomService {
                 });
     }
 
+    // ── 가격 제안 수락 ─────────────────────────────────────
+    @Transactional
+    public ChatRoomResponse acceptNegotiatedPrice(Long roomId, Long memberId, Long price) {
+        ChatRoom room = findRoomAndCheckAccess(roomId, memberId);
+        if (price == null || price <= 0) {
+            throw new IllegalArgumentException("유효하지 않은 협의 가격입니다.");
+        }
+        room.acceptNegotiatedPrice(price);
+        return buildResponse(room, memberId);
+    }
+
+    // ── 협의 가격 조회 (payment-service 내부 통신용) ───────────
+    @Transactional(readOnly = true)
+    public Long getNegotiatedPrice(Long productId, Long buyerId) {
+        return roomRepository.findByProductIdAndBuyerId(productId, buyerId)
+                .map(ChatRoom::getNegotiatedPrice)
+                .orElse(null);
+    }
+
     // ── 접근 권한 확인 ──────────────────────────────────────
     public ChatRoom findRoomAndCheckAccess(Long roomId, Long memberId) {
         ChatRoom room = roomRepository.findById(roomId)
