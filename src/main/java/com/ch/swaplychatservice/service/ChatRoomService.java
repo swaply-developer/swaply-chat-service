@@ -122,6 +122,13 @@ public class ChatRoomService {
         chatMessageService.publishPriceRejected(roomId, memberId, price);
     }
 
+    // ── 협의 가격 초기화 (취소/반품 완료 시 payment-service 내부 통신) ──
+    @Transactional
+    public void resetNegotiatedPrice(Long productId, Long buyerId) {
+        roomRepository.findByProductIdAndBuyerId(productId, buyerId)
+                .ifPresent(room -> room.acceptNegotiatedPrice(null));
+    }
+
     // ── 협의 가격 조회 (payment-service 내부 통신용) ───────────
     @Transactional(readOnly = true)
     public Long getNegotiatedPrice(Long productId, Long buyerId) {

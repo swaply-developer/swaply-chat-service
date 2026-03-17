@@ -128,6 +128,19 @@ public class ChatRoomController {
         return ResponseEntity.ok(Map.of("negotiatedPrice", price != null ? price : -1L));
     }
 
+    /**
+     * DELETE /api/chat/internal/negotiated-price?productId=2&buyerId=3
+     * 취소/반품 완료 시 협의 가격 초기화 (payment-service 내부 통신용)
+     */
+    @DeleteMapping("/internal/negotiated-price")
+    public ResponseEntity<Void> resetNegotiatedPrice(
+            @RequestParam Long productId,
+            @RequestParam Long buyerId
+    ) {
+        chatRoomService.resetNegotiatedPrice(productId, buyerId);
+        return ResponseEntity.noContent().build();
+    }
+
     // ── 헬퍼
     // parseMemberId 메서드 부분을 아래와 같이 수정 (또는 호출부 수정)
     private Long parseMemberId(String header) {
