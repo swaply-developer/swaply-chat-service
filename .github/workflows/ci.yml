@@ -26,11 +26,11 @@ jobs:
         env:
           MYSQL_DATABASE: swaply
           MYSQL_USER: swaply
-          MYSQL_PASSWORD: ${{ secrets.PASSWORD }}
-          MYSQL_ROOT_PASSWORD: ${{ secrets.PASSWORD }}
+          MYSQL_PASSWORD: 1234
+          MYSQL_ROOT_PASSWORD: 1234
         options: >-
           --tmpfs /var/lib/mysql
-          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -p${{ secrets.PASSWORD }} --silent"
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -p1234 --silent"
           --health-interval=10s
           --health-timeout=5s
           --health-retries=20
@@ -52,7 +52,7 @@ jobs:
           - 15672:15672
         env:
           RABBITMQ_DEFAULT_USER: swaply
-          RABBITMQ_DEFAULT_PASS: ${{ secrets.PASSWORD }}
+          RABBITMQ_DEFAULT_PASS: 1234
         options: >-
           --health-cmd="rabbitmq-diagnostics -q ping"
           --health-interval=10s
@@ -75,12 +75,12 @@ jobs:
       # DB
       SPRING_DATASOURCE_URL: jdbc:mysql://127.0.0.1:3306/swaply?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Seoul
       SPRING_DATASOURCE_USERNAME: swaply
-      SPRING_DATASOURCE_PASSWORD: ${{ secrets.PASSWORD }}
+      SPRING_DATASOURCE_PASSWORD: 1234
 
       # Flyway
       SPRING_FLYWAY_URL: jdbc:mysql://127.0.0.1:3306/swaply?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Seoul
       SPRING_FLYWAY_USER: swaply
-      SPRING_FLYWAY_PASSWORD: ${{ secrets.PASSWORD }}
+      SPRING_FLYWAY_PASSWORD: 1234
 
       # Redis
       SPRING_DATA_REDIS_HOST: 127.0.0.1
@@ -90,7 +90,7 @@ jobs:
       SPRING_RABBITMQ_HOST: 127.0.0.1
       SPRING_RABBITMQ_PORT: 5672
       SPRING_RABBITMQ_USERNAME: swaply
-      SPRING_RABBITMQ_PASSWORD: ${{ secrets.PASSWORD }}
+      SPRING_RABBITMQ_PASSWORD: 1234
 
       # 이미지
       IMAGE_REGISTRY: ghcr.io
@@ -130,14 +130,14 @@ jobs:
       - name: Wait for MySQL
         run: |
           for i in {1..60}; do
-            if mysqladmin ping -h 127.0.0.1 -uroot -p${{ secrets.PASSWORD }} --silent; then
+            if mysqladmin ping -h 127.0.0.1 -uroot -p1234 --silent; then
               echo "MySQL is UP"
               break
             fi
             echo "waiting mysql...($i)"
             sleep 2
           done
-          mysqladmin ping -h 127.0.0.1 -uroot -p${{ secrets.PASSWORD }} --silent
+          mysqladmin ping -h 127.0.0.1 -uroot -p1234 --silent
 
       - name: Wait for Redis
         run: |
