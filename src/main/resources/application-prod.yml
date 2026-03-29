@@ -1,4 +1,5 @@
 spring:
   config:
-    import: "optional:configserver:http://localhost:8881"
+    #import: "optional:configserver:http://localhost:8881"
+    import: "optional:configserver:http://swaply-config:8881"  # 수정 영권
 
